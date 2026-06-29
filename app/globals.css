@@ -1,0 +1,16 @@
+@import "tailwindcss";
+
+@theme {
+  --color-accent: #c9a14a;
+}
+@theme inline {
+  --font-sans: var(--font-geist-sans);
+  --font-mono: var(--font-geist-mono);
+}
+
+html, body { height: 100%; }
+body {
+  @apply bg-slate-900 text-slate-100 font-sans antialiased;
+  font-feature-settings: "tnum" 1;
+}
+::selection { background: rgba(201,161,74,0.30); }
