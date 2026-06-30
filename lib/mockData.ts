@@ -14,6 +14,11 @@
  * - kpis.weekRevenue ~R_month / 4.33; revenueByWeek[11] === weekRevenue;
  *   revenueByWeek[10] === round(weekRevenue / (1 + delta/100)).
  * - newPatients.thisMonth === newPatients.newPatients.
+ * - services[].revenue SUMS to ~R_month.
+ * - appointments: completed = totalBooked - noShow - cancelled;
+ *   completed x avgTicket ~ R_month.
+ * - memberships.mrr < "Memberships & Packages" service revenue.
+ * - newRevenue + returningRevenue ~ R_month.
  * - Every tenant: at least one equipment row with netContribution < 0 (underwater).
  * - Every tenant: at least one staff row with flagged: true (low productivity).
  *
@@ -46,6 +51,32 @@ export interface NewPatientsSummary {
   thisMonth: number;
   newPatients: number;           // this month count (=== thisMonth)
   returningPatients: number;     // this month
+  newRevenue: number;            // REAL DERIVATION: revenue attributed to new patients this month
+  returningRevenue: number;      // REAL DERIVATION: revenue attributed to returning patients (newRevenue + returningRevenue ~ R_month)
+}
+
+export interface ServiceCategoryRevenue {
+  category: string;
+  revenue: number;   // monthly revenue for this service category
+}
+
+export interface AppointmentStats {
+  totalBooked: number;
+  completed: number;       // === totalBooked - noShow - cancelled
+  noShow: number;
+  cancelled: number;
+  rebooked: number;        // completed appts with a follow-up booked
+  avgTicket: number;       // SEEDED ESTIMATE: completed x avgTicket ~ R_month
+}
+
+export interface Memberships {
+  activeMembers: number;
+  mrr: number;             // monthly recurring revenue
+}
+
+export interface RetentionCohort {
+  cohortSize: number;      // new patients acquired ~90 days ago
+  returned: number;        // of those, how many have returned since
 }
 
 export interface EquipmentRow {
@@ -73,6 +104,7 @@ export interface Recommendation {
   title: string;                 // short heading
   detail: string;                // one sentence, no em dashes
   category: RecommendationCategory;
+  impactPerMonth: number;        // SEEDED ESTIMATE: dollars/mo at stake; drives sort + impact tag
 }
 
 export interface TenantData {
@@ -85,6 +117,10 @@ export interface TenantData {
   equipment: EquipmentRow[];           // 5 to 6 rows
   staff: StaffRow[];                   // 4 to 5 rows
   recommendations: Recommendation[];   // 4 to 5
+  services: ServiceCategoryRevenue[];  // sums to ~R_month
+  appointments: AppointmentStats;
+  memberships: Memberships;
+  retention: RetentionCohort;
 }
 
 export interface TenantMeta {
@@ -180,6 +216,8 @@ export const mockData: Record<string, TenantData> = {
       thisMonth: 96,
       newPatients: 96,                // === thisMonth
       returningPatients: 412,
+      newRevenue: 92000,              // REAL DERIVATION: revenue from new patients
+      returningRevenue: 326000,       // REAL DERIVATION: revenue from returning patients; sums to 418,000
     },
 
     // 12 weeks of new-patient counts; last 4 weeks sum ~96
@@ -221,12 +259,28 @@ export const mockData: Record<string, TenantData> = {
 
     // 5 recommendations; no em dashes
     recommendations: [
-      { id: "l1", title: "CoolSculpting is underwater",       detail: "28% utilization and a negative net contribution of -$9,300 this month. Run a seasonal body-contouring promotion or restructure the lease.", category: "Equipment" },
-      { id: "l2", title: "IPL Laser underutilized",           detail: "31% utilization this month. Bundle photofacials into existing facial visits to lift device ROI.", category: "Equipment" },
-      { id: "l3", title: "Provider comp out of line",         detail: "Priya Nair's productivity ratio is 2.0x versus the 4.5x team median. Review the incentive structure.", category: "Staff" },
-      { id: "l4", title: "47 lapsed patients eligible for reactivation", detail: "Last visit was 90+ days ago. Launch a win-back message this week.", category: "Retention" },
-      { id: "l5", title: "Revenue up 6.2% week over week",   detail: "Morpheus8 demand is driving the lift. Consider adding a second treatment block.", category: "Revenue" },
+      { id: "l1", title: "CoolSculpting is underwater",       detail: "28% utilization and a negative net contribution of -$9,300 this month. Run a seasonal body-contouring promotion or restructure the lease.", category: "Equipment", impactPerMonth: 9300 },
+      { id: "l2", title: "IPL Laser underutilized",           detail: "31% utilization this month. Bundle photofacials into existing facial visits to lift device ROI.", category: "Equipment", impactPerMonth: 6000 },
+      { id: "l3", title: "Provider comp out of line",         detail: "Priya Nair's productivity ratio is 2.0x versus the 4.5x team median. Review the incentive structure.", category: "Staff", impactPerMonth: 12000 },
+      { id: "l4", title: "47 lapsed patients eligible for reactivation", detail: "Last visit was 90+ days ago. Launch a win-back message this week.", category: "Retention", impactPerMonth: 18000 },
+      { id: "l5", title: "Revenue up 6.2% week over week",   detail: "Morpheus8 demand is driving the lift. Consider adding a second treatment block.", category: "Revenue", impactPerMonth: 4200 },
     ],
+
+    // REAL DERIVATION (transactions x services); sums to 418,000
+    services: [
+      { category: "Injectables",            revenue: 165000 },
+      { category: "Laser & Energy Devices", revenue: 98000  },
+      { category: "Facials & Skincare",     revenue: 64000  },
+      { category: "Body Contouring",        revenue: 48000  },
+      { category: "Memberships & Packages", revenue: 43000  },
+    ],
+
+    // REAL DERIVATION except avgTicket (SEEDED ESTIMATE). 890 = 1020-58-72; 890x470 ~ 418k.
+    appointments: { totalBooked: 1020, completed: 890, noShow: 58, cancelled: 72, rebooked: 547, avgTicket: 470 },
+
+    memberships: { activeMembers: 418, mrr: 38900 },  // REAL DERIVATION; mrr < 43,000 membership service revenue
+
+    retention: { cohortSize: 88, returned: 53 },       // REAL DERIVATION (appointments + clients)
   },
 
   // =========================================================================
@@ -265,6 +319,8 @@ export const mockData: Record<string, TenantData> = {
       thisMonth: 64,
       newPatients: 64,
       returningPatients: 286,
+      newRevenue: 56000,              // REAL DERIVATION: revenue from new patients
+      returningRevenue: 212000,       // REAL DERIVATION: revenue from returning patients; sums to 268,000
     },
 
     newPatientsByWeek: [
@@ -302,11 +358,27 @@ export const mockData: Record<string, TenantData> = {
     ],
 
     recommendations: [
-      { id: "g1", title: "CoolSculpting is underwater",       detail: "24% utilization and a negative net contribution of -$6,200 this month. Consider a summer promo or renegotiate the lease terms.", category: "Equipment" },
-      { id: "g2", title: "Provider comp out of line",         detail: "Brooke Adler's productivity ratio is 1.6x versus the 4.0x team median. Review the incentive structure.", category: "Staff" },
-      { id: "g3", title: "32 lapsed patients eligible for reactivation", detail: "Last visit was 90+ days ago. A targeted reactivation campaign could recover $18k to $25k in monthly revenue.", category: "Retention" },
-      { id: "g4", title: "Revenue down 2.8% week over week",  detail: "Injectables volume dipped this week. Check whether the Q3 promotion calendar is active.", category: "Revenue" },
+      { id: "g1", title: "CoolSculpting is underwater",       detail: "24% utilization and a negative net contribution of -$6,200 this month. Consider a summer promo or renegotiate the lease terms.", category: "Equipment", impactPerMonth: 6200 },
+      { id: "g2", title: "Provider comp out of line",         detail: "Brooke Adler's productivity ratio is 1.6x versus the 4.0x team median. Review the incentive structure.", category: "Staff", impactPerMonth: 8000 },
+      { id: "g3", title: "32 lapsed patients eligible for reactivation", detail: "Last visit was 90+ days ago. A targeted reactivation campaign could recover $18k to $25k in monthly revenue.", category: "Retention", impactPerMonth: 21000 },
+      { id: "g4", title: "Revenue down 2.8% week over week",  detail: "Injectables volume dipped this week. Check whether the Q3 promotion calendar is active.", category: "Revenue", impactPerMonth: 5000 },
     ],
+
+    // REAL DERIVATION (transactions x services); sums to 268,000
+    services: [
+      { category: "Injectables",            revenue: 104000 },
+      { category: "Laser & Energy Devices", revenue: 62000  },
+      { category: "Facials & Skincare",     revenue: 44000  },
+      { category: "Body Contouring",        revenue: 30000  },
+      { category: "Memberships & Packages", revenue: 28000  },
+    ],
+
+    // REAL DERIVATION except avgTicket (SEEDED ESTIMATE). 623 = 713-41-49; 623x430 ~ 268k.
+    appointments: { totalBooked: 713, completed: 623, noShow: 41, cancelled: 49, rebooked: 367, avgTicket: 430 },
+
+    memberships: { activeMembers: 268, mrr: 24600 },   // REAL DERIVATION; mrr < 28,000
+
+    retention: { cohortSize: 58, returned: 33 },        // REAL DERIVATION (appointments + clients)
   },
 
   // =========================================================================
@@ -345,6 +417,8 @@ export const mockData: Record<string, TenantData> = {
       thisMonth: 47,
       newPatients: 47,
       returningPatients: 198,
+      newRevenue: 34000,              // REAL DERIVATION: revenue from new patients
+      returningRevenue: 138000,       // REAL DERIVATION: revenue from returning patients; sums to 172,000
     },
 
     newPatientsByWeek: [
@@ -382,11 +456,27 @@ export const mockData: Record<string, TenantData> = {
     ],
 
     recommendations: [
-      { id: "r1", title: "IPL Laser is underwater",            detail: "22% utilization and a negative net contribution of -$3,800 this month. Bundle IPL into skincare packages or reduce scheduled blocks.", category: "Equipment" },
-      { id: "r2", title: "Provider comp out of line",          detail: "Renata Diaz's productivity ratio is 1.1x versus the 3.2x team median. Reassess scheduling or shift incentive mix.", category: "Staff" },
-      { id: "r3", title: "Revenue up 9.1% week over week",    detail: "Summer demand is picking up. Lock in recurring appointments before the seasonal peak fades.", category: "Revenue" },
-      { id: "r4", title: "21 lapsed patients eligible for reactivation", detail: "Last visit was 90+ days ago. A small win-back offer could re-engage this group quickly.", category: "Retention" },
+      { id: "r1", title: "IPL Laser is underwater",            detail: "22% utilization and a negative net contribution of -$3,800 this month. Bundle IPL into skincare packages or reduce scheduled blocks.", category: "Equipment", impactPerMonth: 3800 },
+      { id: "r2", title: "Provider comp out of line",          detail: "Renata Diaz's productivity ratio is 1.1x versus the 3.2x team median. Reassess scheduling or shift incentive mix.", category: "Staff", impactPerMonth: 5500 },
+      { id: "r3", title: "Revenue up 9.1% week over week",    detail: "Summer demand is picking up. Lock in recurring appointments before the seasonal peak fades.", category: "Revenue", impactPerMonth: 3000 },
+      { id: "r4", title: "21 lapsed patients eligible for reactivation", detail: "Last visit was 90+ days ago. A small win-back offer could re-engage this group quickly.", category: "Retention", impactPerMonth: 9000 },
     ],
+
+    // REAL DERIVATION (transactions x services); sums to 172,000
+    services: [
+      { category: "Injectables",            revenue: 66000 },
+      { category: "Laser & Energy Devices", revenue: 40000 },
+      { category: "Facials & Skincare",     revenue: 30000 },
+      { category: "Body Contouring",        revenue: 18000 },
+      { category: "Memberships & Packages", revenue: 18000 },
+    ],
+
+    // REAL DERIVATION except avgTicket (SEEDED ESTIMATE). 471 = 536-29-36; 471x365 ~ 172k.
+    appointments: { totalBooked: 536, completed: 471, noShow: 29, cancelled: 36, rebooked: 263, avgTicket: 365 },
+
+    memberships: { activeMembers: 172, mrr: 15800 },   // REAL DERIVATION; mrr < 18,000
+
+    retention: { cohortSize: 42, returned: 23 },        // REAL DERIVATION (appointments + clients)
   },
 };
 

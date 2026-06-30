@@ -1,6 +1,6 @@
 "use client";
 
-import type { TenantData } from "@/lib/mockData";
+import type { TenantData, EquipmentRow } from "@/lib/mockData";
 import { formatCurrency } from "@/lib/format";
 
 export default function EquipmentTab({ tenant }: { tenant: TenantData }) {
@@ -14,49 +14,57 @@ export default function EquipmentTab({ tenant }: { tenant: TenantData }) {
     { monthlyPayment: 0, revenueGenerated: 0, netContribution: 0 },
   );
 
+  const payback = (r: EquipmentRow) =>
+    r.netContribution > 0 ? `${Math.ceil(r.payoffBalance / r.netContribution)} mo` : "Never at current pace";
+
   return (
     <div>
       <div className="mb-4">
-        <h2 className="text-xs font-semibold uppercase tracking-widest text-slate-400">Equipment P&L</h2>
-        <span className="text-[11px] text-slate-500">Monthly</span>
+        <h2 className="text-xs font-semibold uppercase tracking-widest text-ink-muted">Equipment P&L</h2>
+        <span className="text-[11px] text-ink-faint">Monthly</span>
       </div>
 
-      <div className="bg-slate-800 border border-slate-700 rounded-sm overflow-hidden">
+      <div className="bg-card border border-line rounded-sm overflow-hidden">
         <table className="w-full text-sm border-collapse">
           <thead>
-            <tr className="text-[11px] uppercase tracking-wider text-slate-400 border-b border-slate-700">
+            <tr className="text-[11px] uppercase tracking-wider text-ink-muted border-b border-line">
               <th className="text-left font-medium px-3 py-2">Machine</th>
               <th className="text-right font-medium px-3 py-2">Monthly Payment</th>
               <th className="text-right font-medium px-3 py-2">Payoff Balance</th>
               <th className="text-right font-medium px-3 py-2">Utilization %</th>
               <th className="text-right font-medium px-3 py-2">Revenue Generated</th>
               <th className="text-right font-medium px-3 py-2">Net Contribution</th>
+              <th className="text-right font-medium px-3 py-2">Payback</th>
             </tr>
           </thead>
           <tbody>
             {equipment.map((row) => (
-              <tr key={row.name} className="border-b border-slate-800 hover:bg-slate-800/40">
-                <td className="px-3 py-2 text-slate-200">{row.name}</td>
+              <tr key={row.name} className="border-b border-line hover:bg-row-hover">
+                <td className="px-3 py-2 text-ink">{row.name}</td>
                 <td className="px-3 py-2 text-right font-mono tabular-nums">{formatCurrency(row.monthlyPayment)}</td>
                 <td className="px-3 py-2 text-right font-mono tabular-nums">{formatCurrency(row.payoffBalance)}</td>
                 <td className="px-3 py-2 text-right font-mono tabular-nums">{Math.round(row.utilizationPct)}%</td>
                 <td className="px-3 py-2 text-right font-mono tabular-nums">{formatCurrency(row.revenueGenerated)}</td>
-                <td className={`px-3 py-2 text-right font-mono tabular-nums ${row.netContribution >= 0 ? "text-emerald-400" : "text-red-400"}`}>
+                <td className={`px-3 py-2 text-right font-mono tabular-nums ${row.netContribution >= 0 ? "text-pos" : "text-neg"}`}>
                   {formatCurrency(row.netContribution)}
+                </td>
+                <td className={`px-3 py-2 text-right font-mono tabular-nums ${row.netContribution > 0 ? "text-ink" : "text-ink-faint"}`}>
+                  {payback(row)}
                 </td>
               </tr>
             ))}
           </tbody>
           <tfoot>
-            <tr className="text-slate-300 border-t border-slate-700 font-mono tabular-nums text-sm">
-              <td className="px-3 py-2 font-medium text-slate-400">Total</td>
+            <tr className="text-ink-muted border-t border-line font-mono tabular-nums text-sm">
+              <td className="px-3 py-2 font-medium text-ink-muted">Total</td>
               <td className="px-3 py-2 text-right">{formatCurrency(totals.monthlyPayment)}</td>
               <td className="px-3 py-2" />
               <td className="px-3 py-2" />
               <td className="px-3 py-2 text-right">{formatCurrency(totals.revenueGenerated)}</td>
-              <td className={`px-3 py-2 text-right ${totals.netContribution >= 0 ? "text-emerald-400" : "text-red-400"}`}>
+              <td className={`px-3 py-2 text-right ${totals.netContribution >= 0 ? "text-pos" : "text-neg"}`}>
                 {formatCurrency(totals.netContribution)}
               </td>
+              <td className="px-3 py-2" />
             </tr>
           </tfoot>
         </table>

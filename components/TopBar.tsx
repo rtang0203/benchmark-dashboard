@@ -2,7 +2,8 @@
 
 import { useState } from "react";
 import type { TenantMeta, AppUser } from "@/lib/mockData";
-import { ChevronDown } from "@/components/ui/icons";
+import type { CanvasTheme } from "@/lib/theme";
+import { ChevronDown, Sun, Moon } from "@/components/ui/icons";
 
 interface Props {
   tenants: TenantMeta[];
@@ -12,6 +13,8 @@ interface Props {
   users: AppUser[];
   activeUser: AppUser;
   onUserChange: (id: string) => void;
+  canvasTheme: CanvasTheme;
+  onCanvasThemeChange: (t: CanvasTheme) => void;
 }
 
 function Dropdown({
@@ -53,7 +56,7 @@ function Dropdown({
   );
 }
 
-export default function TopBar({ tenants, tenantId, tenantName, onTenantChange, users, activeUser, onUserChange }: Props) {
+export default function TopBar({ tenants, tenantId, tenantName, onTenantChange, users, activeUser, onUserChange, canvasTheme, onCanvasThemeChange }: Props) {
 
   return (
     <header className="h-14 shrink-0 flex items-center justify-between px-5 border-b border-slate-800 bg-slate-900">
@@ -65,6 +68,28 @@ export default function TopBar({ tenants, tenantId, tenantName, onTenantChange, 
 
       {/* Right side */}
       <div className="flex items-center gap-4">
+        {/* Theme toggle (chrome, not canvas tokens) */}
+        <div className="flex items-center rounded-sm border border-slate-700 overflow-hidden" role="group" aria-label="Canvas theme">
+          <button
+            type="button"
+            onClick={() => onCanvasThemeChange("light")}
+            aria-pressed={canvasTheme === "light"}
+            className={`flex items-center gap-1 px-2 py-1 text-[11px] focus:outline-none focus-visible:ring-1 focus-visible:ring-accent ${canvasTheme === "light" ? "bg-slate-700 text-slate-100" : "text-slate-400 hover:text-slate-200"}`}
+          >
+            <Sun className="h-3.5 w-3.5" /> Light
+          </button>
+          <button
+            type="button"
+            onClick={() => onCanvasThemeChange("dark")}
+            aria-pressed={canvasTheme === "dark"}
+            className={`flex items-center gap-1 px-2 py-1 text-[11px] focus:outline-none focus-visible:ring-1 focus-visible:ring-accent ${canvasTheme === "dark" ? "bg-slate-700 text-slate-100" : "text-slate-400 hover:text-slate-200"}`}
+          >
+            <Moon className="h-3.5 w-3.5" /> Dark
+          </button>
+        </div>
+
+        <div className="h-5 w-px bg-slate-700" />
+
         {/* Tenant switcher: admin sees dropdown, staff/owner sees static label */}
         {activeUser.tenantId === null ? (
           <Dropdown
