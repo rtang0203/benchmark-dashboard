@@ -23,7 +23,7 @@ export default function Sidebar({ activeTab, onSelect, role }: Props) {
   const tabs = allTabs.filter((t) => allowed.includes(t.id));
 
   return (
-    <nav className="w-56 shrink-0 border-r border-slate-800 bg-slate-900 py-3">
+    <nav className="hidden md:block w-56 shrink-0 border-r border-slate-800 bg-slate-900 py-3">
       {tabs.map((tab) => {
         const active = tab.id === activeTab;
         return (

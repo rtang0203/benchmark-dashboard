@@ -16,9 +16,9 @@ export default function RecommendationsTab({ tenant }: { tenant: TenantData }) {
       <div className="flex flex-col gap-3">
         {sorted.map((rec) => (
           <Card key={rec.id}>
-            <div className="flex items-start justify-between gap-4">
+            <div className="flex flex-col sm:flex-row sm:items-start justify-between gap-2 sm:gap-4">
               <h3 className="text-sm font-medium text-ink">{rec.title}</h3>
-              <div className="flex items-center gap-3">
+              <div className="flex items-center gap-3 mt-1 sm:mt-0">
                 <span className="text-sm font-mono tabular-nums text-gold whitespace-nowrap">~{formatCurrency(rec.impactPerMonth)}/mo</span>
                 <Tag>{rec.category}</Tag>
               </div>

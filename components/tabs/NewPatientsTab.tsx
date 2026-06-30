@@ -18,9 +18,9 @@ export default function NewPatientsTab({ tenant, theme }: { tenant: TenantData; 
   return (
     <div>
       {/* Existing top row: bar chart + KPI + donut */}
-      <div className="grid grid-cols-3 gap-4">
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
         {/* Left two columns: bar chart */}
-        <div className="col-span-2 bg-card border border-line rounded-sm p-4">
+        <div className="col-span-1 md:col-span-2 bg-card border border-line rounded-sm p-4">
           <h2 className="text-xs font-semibold uppercase tracking-widest text-ink-muted mb-3">
             New patients, last 12 weeks
           </h2>
@@ -44,9 +44,9 @@ export default function NewPatientsTab({ tenant, theme }: { tenant: TenantData; 
       </div>
 
       {/* New second row: revenue split + retention */}
-      <div className="grid grid-cols-3 gap-4 mt-4">
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mt-4">
         {/* Revenue split card */}
-        <div className="col-span-2 bg-card border border-line rounded-sm p-4">
+        <div className="col-span-1 md:col-span-2 bg-card border border-line rounded-sm p-4">
           <h2 className="text-xs font-semibold uppercase tracking-widest text-ink-muted mb-3">
             New vs returning revenue, this month
           </h2>
@@ -56,7 +56,7 @@ export default function NewPatientsTab({ tenant, theme }: { tenant: TenantData; 
             <span style={{ flexGrow: returningRevenue, backgroundColor: c.mixReturning }} />
           </div>
           {/* Legend */}
-          <div className="mt-3 flex gap-6 text-xs">
+          <div className="mt-3 flex flex-wrap gap-x-4 gap-y-1 text-xs">
             <span className="flex items-center gap-1.5">
               <span className="h-2 w-2 rounded-full" style={{ background: c.mixNew }} />
               <span className="text-ink">New {formatCurrency(newRevenue)}</span>

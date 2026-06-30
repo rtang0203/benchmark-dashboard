@@ -17,8 +17,8 @@ export default function StaffTab({ tenant }: { tenant: TenantData }) {
         </span>
       </div>
 
-      <div className="bg-card border border-line rounded-sm overflow-hidden">
-        <table className="w-full text-sm border-collapse">
+      <div className="bg-card border border-line rounded-sm overflow-x-auto">
+        <table className="w-full text-sm border-collapse min-w-[650px]">
           <thead>
             <tr className="text-[11px] uppercase tracking-wider text-ink-muted border-b border-line">
               <th className="text-left font-medium px-3 py-2">Name</th>

@@ -3,7 +3,7 @@
 import { useState } from "react";
 import type { TenantMeta, AppUser } from "@/lib/mockData";
 import type { CanvasTheme } from "@/lib/theme";
-import { ChevronDown, Sun, Moon } from "@/components/ui/icons";
+import { ChevronDown, Sun, Moon, Menu } from "@/components/ui/icons";
 
 interface Props {
   tenants: TenantMeta[];
@@ -15,6 +15,7 @@ interface Props {
   onUserChange: (id: string) => void;
   canvasTheme: CanvasTheme;
   onCanvasThemeChange: (t: CanvasTheme) => void;
+  onMenuToggle?: () => void;
 }
 
 function Dropdown({
@@ -56,18 +57,29 @@ function Dropdown({
   );
 }
 
-export default function TopBar({ tenants, tenantId, tenantName, onTenantChange, users, activeUser, onUserChange, canvasTheme, onCanvasThemeChange }: Props) {
+export default function TopBar({ tenants, tenantId, tenantName, onTenantChange, users, activeUser, onUserChange, canvasTheme, onCanvasThemeChange, onMenuToggle }: Props) {
 
   return (
     <header className="h-14 shrink-0 flex items-center justify-between px-5 border-b border-slate-800 bg-slate-900">
       {/* Brand */}
-      <div className="flex items-center gap-2.5">
-        <div className="h-5 w-5 bg-accent rounded-sm" />
-        <span className="font-semibold tracking-tight text-slate-100">Benchmark</span>
+      <div className="flex items-center gap-3">
+        {onMenuToggle && (
+          <button
+            onClick={onMenuToggle}
+            className="md:hidden p-1 rounded-sm text-slate-400 hover:text-slate-200 hover:bg-slate-800 focus:outline-none focus:ring-1 focus:ring-accent"
+            aria-label="Open menu"
+          >
+            <Menu className="h-5 w-5" />
+          </button>
+        )}
+        <div className="flex items-center gap-2.5">
+          <div className="h-5 w-5 bg-accent rounded-sm" />
+          <span className="font-semibold tracking-tight text-slate-100">Benchmark</span>
+        </div>
       </div>
 
       {/* Right side */}
-      <div className="flex items-center gap-4">
+      <div className="hidden md:flex items-center gap-4">
         {/* Theme toggle (chrome, not canvas tokens) */}
         <div className="flex items-center rounded-sm border border-slate-700 overflow-hidden" role="group" aria-label="Canvas theme">
           <button

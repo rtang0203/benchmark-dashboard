@@ -19,7 +19,7 @@ export default function OverviewTab({ tenant, theme }: { tenant: TenantData; the
   return (
     <div>
       {/* Existing KPI row */}
-      <div className="grid grid-cols-3 gap-4">
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
         <KpiTile label="This Week's Revenue" value={formatCurrency(kpis.weekRevenue)}>
           <Delta value={kpis.weekRevenueDeltaPct} />
         </KpiTile>
@@ -28,7 +28,7 @@ export default function OverviewTab({ tenant, theme }: { tenant: TenantData; the
       </div>
 
       {/* New second tile row: no-show, rebooking, membership MRR */}
-      <div className="grid grid-cols-3 gap-4 mt-4">
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mt-4">
         <KpiTile label="No-show / Cancellation Rate" value={formatPercent(noShowRate)}>
           <div className="mt-1 text-xs text-ink-faint">Est. {formatCurrency(lostRevenue)}/mo lost</div>
         </KpiTile>
